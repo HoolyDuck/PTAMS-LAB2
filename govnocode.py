@@ -1,5 +1,8 @@
 import math
+
+import numpy
 import numpy as np
+import scipy.stats as st
 
 ta_map = {
     0.2: 0.253,
@@ -23,7 +26,7 @@ xi_map = {
 }
 
 
-def double_interval_for_ms(arr, ta):
+def double_interval_for_ms(arr, trust):
     n = len(arr)
     S = 0
     for i in range(n):
@@ -31,13 +34,13 @@ def double_interval_for_ms(arr, ta):
     S /= n - 1
     average = np.average(arr)
     S -= average * average
-    ta = ta_map[ta]
-    u1 = average - ta * math.sqrt(S) / math.sqrt(n)
-    u2 = average + ta * math.sqrt(S) / math.sqrt(n)
+    t = abs(st.t.ppf((1 - trust) / 2, n - 1))
+    u1 = average - t * math.sqrt(S) / math.sqrt(n)
+    u2 = average + t * math.sqrt(S) / math.sqrt(n)
     return u1, u2
 
 
-def double_interval_for_sv(arr, xi):
+def double_interval_for_sv(arr, trust):
     n = len(arr)
     S = 0
     for i in range(n):
@@ -45,8 +48,8 @@ def double_interval_for_sv(arr, xi):
     S /= n - 1
     average = np.average(arr)
     S -= average * average
-    xi_1 = xi_map[xi / 2]
-    xi_2 = xi_map[round(1 - xi / 2, 3)]
+    xi_1 = st.chi2.ppf(1 - (1 - trust) / 2, n - 1)
+    xi_2 = st.chi2.ppf((1 - trust) / 2, n - 1)
     u1 = S * (n - 1) / xi_1
     u2 = S * (n - 1) / xi_2
     return math.sqrt(u1), math.sqrt(u2)
